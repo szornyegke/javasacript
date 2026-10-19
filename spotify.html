@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify ranglista műfajonként</title>
+
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f4f4f4; 
+            margin: 30px; 
+        }
+        input, button { 
+            padding: 6px; 
+            margin: 5px;
+        }
+        table {
+            width: 85%;
+            margin: 0 auto 20px auto;
+            border-collapse: collapse; 
+            background: white; 
+        }
+        th, td {
+            border: 1px solid gray;
+            padding: 8px; 
+            text-align: left;
+        }
+        th {
+            background: #1DB954;
+            color: white;
+        }
+        .mufaj-cim {
+            width: 85%;
+            margin: 25px auto 5px auto;
+            color: #1DB954;
+            font-size: 20px;
+        }
+        .msg-box {
+            display: none;
+            background-color: #ffdddd;
+            border-left: 6px solid #f44336;
+            margin-bottom: 15px;
+            padding: 10px;
+            width: 85%;
+            margin: 0 auto 15px auto;
+        }
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align: center;">Spotify ranglista műfajonként</h1>
+
+   
+
+    <div style="text-align: center;">
+        <input id="mufaj" placeholder="Műfaj (pl. Pop, Rock)">
+        <input id="eloado" placeholder="Előadó">
+        <input id="dal" placeholder="Dal címe">
+        <input id="hallgatottsag" type="number" step="0.1" placeholder="Hallgatottság (millió)">
+        <button id="ment" onclick="mentes()">Hozzáadás</button>
+    </div>
+
+    <br><br>
+
+    <div id="mufajok-kontener"></div>
+
+    <script>
+     
+        let dalok = [
+            { mufaj: "Pop", eloado: "The Weeknd", dal: "Blinding Lights", hallgatottsag: 41 },
+            { mufaj: "Pop", eloado: "Dua Lipa", dal: "Levitating", hallgatottsag: 28 },
+            { mufaj: "Pop", eloado: "Ed Sheeran", dal: "Shape of You", hallgatottsag: 39 },
+            { mufaj: "Rock", eloado: "Queen", dal: "Bohemian Rhapsody", hallgatottsag: 25 },
+            { mufaj: "Rock", eloado: "Nirvana", dal: "Smells Like Teen Spirit", hallgatottsag: 19 },
+            { mufaj: "Hip-Hop", eloado: "Kendrick Lamar", dal: "HUMBLE.", hallgatottsag: 21 }
+        ];
+
+        let modosit = -1;
+
+        
+
+        function mentes() {
+            let mufaj = document.getElementById("mufaj").value;
+            let eloado = document.getElementById("eloado").value;
+            let dal = document.getElementById("dal").value;
+            let hallgatottsag = parseFloat(document.getElementById("hallgatottsag").value);
+
+            if (mufaj == "" || eloado == "" || dal == "" || isNaN(hallgatottsag)) {
+                uzenetMutat("Kérlek, töltsd ki az összes mezőt érvényes adatokkal!");
+                return;
+            }
+
+            let szam = {
+                mufaj: mufaj,
+                eloado: eloado,
+                dal: dal,
+                hallgatottsag: hallgatottsag
+            };
+
+            if (modosit == -1) {
+                dalok.push(szam);
+            } else {
+                dalok[modosit] = szam;
+                modosit = -1;
+                document.getElementById("ment").innerText = "Hozzáadás";
+            }
+
+            document.getElementById("mufaj").value = "";
+            document.getElementById("eloado").value = "";
+            document.getElementById("dal").value = "";
+            document.getElementById("hallgatottsag").value = "";
+
+            kiiras();
+        }
+
+        function szerkesztes(id) {
+            document.getElementById("mufaj").value = dalok[id].mufaj;
+            document.getElementById("eloado").value = dalok[id].eloado;
+            document.getElementById("dal").value = dalok[id].dal;
+            document.getElementById("hallgatottsag").value = dalok[id].hallgatottsag;
+
+            modosit = id;
+            document.getElementById("ment").innerText = "Módosítás mentése";
+        }
+
+        function torles(id) {
+            dalok.splice(id, 1);
+            kiiras();
+        }
+
+        function kiiras() {
+            let kontener = document.getElementById("mufajok-kontener");
+            kontener.innerHTML = "";
+
+       
+            let mufajok = [];
+            for (let i = 0; i < dalok.length; i++) {
+                if (!mufajok.includes(dalok[i].mufaj)) {
+                    mufajok.push(dalok[i].mufaj);
+                }
+            }
+
+            for (let m = 0; m < mufajok.length; m++) {
+                let aktualisMufaj = mufajok[m];
+
+                let mufajDalai = [];
+                for (let i = 0; i < dalok.length; i++) {
+                    if (dalok[i].mufaj === aktualisMufaj) {
+                        mufajDalai.push({
+                            eredetiIndex: i,
+                            eloado: dalok[i].eloado,
+                            dal: dalok[i].dal,
+                            hallgatottsag: dalok[i].hallgatottsag
+                        });
+                    }
+                }
+
+             
+                mufajDalai.sort(function(a, b) {
+                    return b.hallgatottsag - a.hallgatottsag;
+                });
+
+              
+                let html = "<h2 class='mufaj-cim'>" + aktualisMufaj + " műfaj</h2>";
+                html += "<table>";
+                html += "<thead><tr>";
+                html += "<th>Helyezés</th>";
+                html += "<th>Előadó</th>";
+                html += "<th>Dal címe</th>";
+                html += "<th>Hallgatottság (M)</th>";
+                html += "<th>Műveletek</th>";
+                html += "</tr></thead><tbody>";
+
+                for (let h = 0; h < mufajDalai.length; h++) {
+                    let d = mufajDalai[h];
+                    html += "<tr>";
+                    html += "<td>" + (h + 1) + ". hely</td>";
+                    html += "<td>" + d.eloado + "</td>";
+                    html += "<td>" + d.dal + "</td>";
+                    html += "<td>" + d.hallgatottsag + " millió</td>";
+                    html += "<td>";
+                    html += "<button onclick='szerkesztes(" + d.eredetiIndex + ")'>Módosít</button>";
+                    html += "<button onclick='torles(" + d.eredetiIndex + ")'>Töröl</button>";
+                    html += "</td></tr>";
+                }
+
+                html += "</tbody></table>";
+                kontener.innerHTML += html;
+            }
+        }
+
+      
+        kiiras();
+    </script>
+
+</body>
+</html>
